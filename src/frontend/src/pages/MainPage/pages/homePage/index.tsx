@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PaginatorComponent from "@/components/common/paginatorComponent";
+import CopilotChat from "@/components/copilot/CopilotChat";
 import CardsWrapComponent from "@/components/core/cardsWrapComponent";
 import { IS_MAC } from "@/constants/constants";
 import { useGetFolderQuery } from "@/controllers/API/queries/folders/use-get-folder";
@@ -27,6 +28,7 @@ const HomePage = ({ type }: { type: "flows" | "components" | "mcp" }) => {
     return savedView === "grid" || savedView === "list" ? savedView : "list";
   });
   const [newProjectModal, setNewProjectModal] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
   const { folderId } = useParams();
   const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(12);
@@ -264,6 +266,7 @@ const HomePage = ({ type }: { type: "flows" | "components" | "mcp" }) => {
                 setSearch={onSearch}
                 isEmptyFolder={isEmptyFolder}
                 selectedFlows={selectedFlows}
+                setCopilotOpen={setCopilotOpen}
               />
               {isEmptyFolder ? (
                 <EmptyFolder setOpenModal={setNewProjectModal} />
@@ -370,6 +373,7 @@ const HomePage = ({ type }: { type: "flows" | "components" | "mcp" }) => {
         setOpenDeleteFolderModal={() => {}}
         handleDeleteFolder={() => {}}
       />
+      <CopilotChat open={copilotOpen} setOpen={setCopilotOpen} />
     </CardsWrapComponent>
   );
 };

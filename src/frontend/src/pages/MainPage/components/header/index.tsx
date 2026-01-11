@@ -1,4 +1,5 @@
 import { debounce } from "lodash";
+import { MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ForwardedIconComponent from "@/components/common/genericIconComponent";
 import ShadTooltip from "@/components/common/shadTooltipComponent";
@@ -22,6 +23,7 @@ interface HeaderComponentProps {
   setSearch: (search: string) => void;
   isEmptyFolder: boolean;
   selectedFlows: string[];
+  setCopilotOpen?: (open: boolean) => void;
 }
 
 const HeaderComponent = ({
@@ -34,6 +36,7 @@ const HeaderComponent = ({
   setSearch,
   isEmptyFolder,
   selectedFlows,
+  setCopilotOpen,
 }: HeaderComponentProps) => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const isMCPEnabled = ENABLE_MCP;
@@ -241,6 +244,23 @@ const HeaderComponent = ({
                     </span>
                   </Button>
                 </ShadTooltip>
+                {setCopilotOpen && (
+                  <ShadTooltip content="Copilot Agent" side="bottom">
+                    <Button
+                      variant="outline"
+                      size="iconMd"
+                      className="z-50 px-2.5 !text-mmd"
+                      onClick={() => setCopilotOpen(true)}
+                      id="copilot-btn"
+                      data-testid="copilot-btn"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="hidden whitespace-nowrap font-semibold md:inline">
+                        Copilot
+                      </span>
+                    </Button>
+                  </ShadTooltip>
+                )}
               </div>
             </div>
           )}

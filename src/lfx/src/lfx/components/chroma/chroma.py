@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import TYPE_CHECKING
 
 from chromadb.config import Settings
 from langchain_chroma import Chroma
@@ -9,9 +8,7 @@ from lfx.base.vectorstores.model import LCVectorStoreComponent, check_cached_vec
 from lfx.base.vectorstores.utils import chroma_collection_to_data
 from lfx.inputs.inputs import BoolInput, DropdownInput, HandleInput, IntInput, StrInput
 from lfx.schema.data import Data
-
-if TYPE_CHECKING:
-    from lfx.schema.dataframe import DataFrame
+from lfx.schema.dataframe import DataFrame
 
 
 class ChromaVectorStoreComponent(LCVectorStoreComponent):

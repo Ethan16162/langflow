@@ -30,7 +30,7 @@ class Data(CrossModuleModel):
         data (dict, optional): Additional data associated with the record.
     """
 
-    model_config = ConfigDict(validate_assignment=True)
+    model_config = ConfigDict(validate_assignment=True, extra="allow")
 
     text_key: str = "text"
     data: dict = {}

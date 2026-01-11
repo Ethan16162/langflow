@@ -7,7 +7,7 @@ from lfx.template.utils import update_template_values
 
 
 class PromptComponent(Component):
-    display_name: str = "Prompt Template"
+    display_name: str = "Prompt Template guoyansong"
     description: str = "Create a prompt template with dynamic variables."
     documentation: str = "https://docs.langflow.org/components-prompts"
     icon = "braces"

@@ -838,6 +838,75 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
         { ...vertexBuildData, run_id: runId },
         vertexBuildData.id,
       );
+
+      // 检查是否需要自动填充 editable_text（用于 Agent 组件）
+      console.log("vertexBuildData:", vertexBuildData);
+      // 判断组件类别
+      const idValue = vertexBuildData?.id;
+      const idstr = String(idValue).toLocaleLowerCase();
+
+      if (
+        idstr.includes("parsercomponent") ||
+        idstr.includes("editcomponent")
+      ) {
+        // ParserComponent组件
+        const modelResponseOutput = vertexBuildData?.data?.outputs?.parsed_text;
+        console.log("gys-edit:", modelResponseOutput);
+        const node = get().nodes.find((n) => n.id === vertexBuildData.id);
+        if (
+          node &&
+          node.type === "genericNode" &&
+          node.data.node?.template?.editable_text
+        ) {
+          const editableTextValue = modelResponseOutput?.message;
+          // message.editable_text_value || message.text || "";
+          if (editableTextValue) {
+            get().setNode(
+              vertexBuildData.id,
+              (oldNode) => {
+                if (oldNode.type !== "genericNode") return oldNode;
+                const newNode = cloneDeep(oldNode);
+                const nodeTemplate = newNode.data.node?.template;
+                if (nodeTemplate?.editable_text) {
+                  nodeTemplate.editable_text.value = editableTextValue;
+                }
+                return newNode;
+              },
+              false,
+            );
+          }
+        }
+      } else if (idstr.includes("agent")) {
+        // agent组件
+        const modelResponseOutput =
+          vertexBuildData?.data?.outputs?.model_response;
+
+        const node = get().nodes.find((n) => n.id === vertexBuildData.id);
+        if (
+          node &&
+          node.type === "genericNode" &&
+          node.data.node?.template?.editable_text
+        ) {
+          const editableTextValue = modelResponseOutput?.message;
+          // message.editable_text_value || message.text || "";
+          if (editableTextValue) {
+            get().setNode(
+              vertexBuildData.id,
+              (oldNode) => {
+                if (oldNode.type !== "genericNode") return oldNode;
+                const newNode = cloneDeep(oldNode);
+                const nodeTemplate = newNode.data.node?.template;
+                if (nodeTemplate?.editable_text) {
+                  nodeTemplate.editable_text.value = editableTextValue;
+                }
+                return newNode;
+              },
+              false,
+            );
+          }
+        }
+      }
+
       if (status !== BuildStatus.ERROR) {
         get().updateBuildStatus([vertexBuildData.id], status);
       }

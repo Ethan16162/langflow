@@ -32,8 +32,9 @@ if TYPE_CHECKING:
 
 
 class Message(Data):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
     # Helper class to deal with image data
+    guoyansong: str | None = None
     text_key: str = "text"
     text: str | AsyncIterator | Iterator | None = Field(default="")
     sender: str | None = None

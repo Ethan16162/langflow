@@ -254,7 +254,7 @@ async def generate_workflow_with_llm(
     # ====================== TEST： 直接读取答案
     # 读取并解析 JSON
     json_file = Path(
-        "/mnt/d/HonorStoreDownload/WSL/code/langflow/langflow/src/backend/base/langflow/agent_workflow/answer.json"
+        "/home/gys/catl/langflow/src/backend/base/langflow/agent_workflow/answer.json"
     )
     import asyncio
 

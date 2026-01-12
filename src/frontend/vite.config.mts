@@ -60,6 +60,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), svgr(), tsconfigPaths()],
     server: {
       port: port,
+      host: '0.0.0.0',  // 👈 添加这一行！
       proxy: {
         ...proxyTargets,
       },

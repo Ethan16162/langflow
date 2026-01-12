@@ -213,6 +213,7 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
     const nodes = flow?.data?.nodes ?? [];
     const edges = flow?.data?.edges ?? [];
     const brokenEdges = detectBrokenEdgesEdges(nodes, edges);
+    console.log("Broken Edges Details:", JSON.stringify(brokenEdges, null, 2));
     if (brokenEdges.length > 0) {
       useAlertStore.getState().setErrorData({
         title: BROKEN_EDGES_WARNING,

@@ -1,8 +1,8 @@
 # 👇 放在这里！在所有 import 之后、函数定义之前
-import debugpy
+# import debugpy
 
-debugpy.listen(("0.0.0.0", 5678))
-print("Debugpy listening on port 5678")
+# debugpy.listen(("0.0.0.0", 5678))
+# print("Debugpy listening on port 5678")
 
 import asyncio
 import json

@@ -140,9 +140,8 @@ async def generate_and_save_workflow(
                 select(Folder).where(Folder.name == DEFAULT_FOLDER_NAME, Folder.user_id == current_user.id)
             )
         ).first()
-        import pdb
+        # import pdb; pdb.set_trace()
 
-        pdb.set_trace()
         if not default_folder:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Default folder not found")
 

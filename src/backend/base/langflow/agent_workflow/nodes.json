@@ -344,7 +344,7 @@
               "tool_mode": false,
               "trace_as_input": true,
               "type": "prompt",
-              "value": "<Need Edit!>: 请在这里输入和用户请求相关的提示信息" 
+              "value": "<Need Edit!>: 请在这里输入和用户请求相关的提示信息"
             },
             "tool_placeholder": {
               "_input_type": "MessageTextInput",

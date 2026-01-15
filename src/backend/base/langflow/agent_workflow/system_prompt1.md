@@ -113,7 +113,7 @@
           "display_name": "Template",
           "name": "template",
           "type": "prompt",
-          "value": "<Need Edit!>: 请在这里输入和用户请求相关的系统提示信息" 
+          "value": "<Need Edit!>: 请在这里输入和用户请求相关的系统提示信息"
         }
       }
     },

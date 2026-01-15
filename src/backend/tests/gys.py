@@ -1,21 +1,22 @@
 import asyncio
+
+from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
+
 
 async def test():
     llm = ChatOpenAI(
         model="deepseek-chat",
         openai_api_key="sk-882115c34ef04e0bae6d9724597fa0fa",  # 你的 Google API Key
         temperature=0,
-        base_url="https://api.deepseek.com/v1"
+        base_url="https://api.deepseek.com/v1",
     )
 
     resp = await llm.ainvoke([HumanMessage(content="Hello")])
     print(resp.content)
 
+
 asyncio.run(test())
-
-
 
 
 # Extract JSON from response (handle markdown code blocks)

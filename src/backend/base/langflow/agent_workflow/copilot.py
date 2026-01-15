@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
-import json
+import re
 import secrets
-from pathlib import Path
 from typing import Any
 
 from lfx.log.logger import logger
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from langflow.services.deps import get_settings_service
+import copy
+import json
+from pathlib import Path
+from typing import Dict, Any
+from copy import deepcopy
 
 
 def load_system_prompt() -> str:
@@ -194,99 +200,111 @@ async def generate_workflow_with_llm(
     # Load system prompt
     system_prompt = load_system_prompt()
 
-    # Initialize LLM
+    # ==================== 1. Initialize LLM
     # Try ModelScope API first, fallback to OpenAI if needed
-    # try:
-    #     from langchain_google_genai import ChatGoogleGenerativeAI
-    #     await logger.adebug("Initializing LLM with ModelScope API...")
-    # llm = ChatOpenAI(
-    #     model="Qwen/Qwen2.5-72B-Instruct",
-    #     temperature=0.3,
-    #     openai_api_key="ms-0d6c23a7-6bc2-442a-b01f-ae10f95d3e65",
-    #     base_url="https://api.modelscope.cn/v1",
-    #     timeout=60.0,  # Add timeout
-    # )
-    #     llm = ChatGoogleGenerativeAI(
-    #         model="gemini-2.5-flash-lite",
-    #         google_api_key="AIzaSyC_lesT3WXoC6d_0OVf9FLB_RwcvhZwnys",  # 你的 Google API Key
-    #         temperature=0.3,
-    #     )
-    #     await logger.adebug("ModelScope LLM initialized successfully")
-    # except Exception as e:
-    #     await logger.awarning(f"Failed to initialize ModelScope LLM: {e}, falling back to OpenAI")
-    #     # Fallback to OpenAI
-    #     if not api_key:
-    #         raise ValueError("OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.")
-    #     llm = ChatOpenAI(
-    #         model="gpt-4o-mini",
-    #         temperature=0.3,
-    #         openai_api_key=api_key,
-    #     )
+    try:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        await logger.ainfo("Initializing LLM with Deepseek API...")
+        llm = ChatOpenAI(
+        model="deepseek-chat",
+        openai_api_key="sk-882115c34ef04e0bae6d9724597fa0fa",  # 你的 Deepseek API Key
+        temperature=0,
+        base_url="https://api.deepseek.com/v1"
+    )
+        # llm = ChatGoogleGenerativeAI(
+        #     model="gemini-2.5-flash-lite",
+        #     google_api_key="AIzaSyC_lesT3WXoC6d_0OVf9FLB_RwcvhZwnys",  # 你的 Google API Key
+        #     temperature=0.3,
+        # )
+        await logger.ainfo("ModelScope LLM initialized successfully")
+    except Exception as e:
+        await logger.awarning(f"Failed to initialize ModelScope LLM: {e}, falling back to OpenAI")
+        # Fallback to OpenAI
+        if not api_key:
+            raise ValueError("OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.")
+        llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0.3,
+            openai_api_key=api_key,
+        )
 
-    # Build messages
-    # messages = [SystemMessage(content=system_prompt)]
+    # ==================== 2. Build messages
+    messages = [SystemMessage(content=system_prompt)]
 
-    # # Add conversation history
-    # if conversation_history:
-    #     for msg in conversation_history:
-    #         if msg.get("role") == "user":
-    #             messages.append(HumanMessage(content=msg.get("content", "")))
-    #         elif msg.get("role") == "assistant":
-    #             messages.append(SystemMessage(content=msg.get("content", "")))
+    # Add conversation history
+    if conversation_history:
+        for msg in conversation_history:
+            if msg.get("role") == "user":
+                messages.append(HumanMessage(content=msg.get("content", "")))
+            elif msg.get("role") == "assistant":
+                messages.append(SystemMessage(content=msg.get("content", "")))
 
-    # # Add current user message
-    # messages.append(HumanMessage(content=user_message))
+    # Add current user message
+    messages.append(HumanMessage(content=user_message))
 
-    # ====================== Call LLM
-    # await logger.adebug("Calling LLM to generate workflow...")
-    # try:
-    #     response = await llm.ainvoke(messages)
-    #     response_text = response.content
-    #     if not response_text:
-    #         raise ValueError("Empty response from LLM")
-    #     await logger.adebug(f"LLM response received, length: {len(response_text)}")
-    # except Exception as e:
-    #     error_msg = f"LLM invocation failed: {str(e)}"
-    #     await logger.aerror(error_msg)
-    #     await logger.aexception("LLM call error")
-    #     raise ValueError(f"Failed to call LLM: {str(e)}") from e
+    # ===================== 3. Call LLM
+    await logger.adebug("Calling LLM to generate workflow...")
+    try:
+        response = await llm.ainvoke(messages)
+        response_text = response.content
+        if not response_text:
+            raise ValueError("Empty response from LLM")
+        await logger.adebug(f"LLM response received, length: {len(response_text)}")
+    except Exception as e:
+        error_msg = f"LLM invocation failed: {str(e)}"
+        await logger.aerror(error_msg)
+        await logger.aexception("LLM call error")
+        raise ValueError(f"Failed to call LLM: {str(e)}") from e
 
     # ====================== TEST： 直接读取答案
     # 读取并解析 JSON
-    json_file = Path(
-        "/home/gys/catl/langflow/src/backend/base/langflow/agent_workflow/answer.json"
-    )
-    import asyncio
+    # json_file = Path(
+    #     "/home/gys/catl/langflow/src/backend/base/langflow/agent_workflow/answer.json"
+    # )
+    # import asyncio
 
-    # 在线程池中执行阻塞操作
-    def _load_json():
-        with json_file.open("r", encoding="utf-8") as f:
-            return json.load(f)
+    # # 在线程池中执行阻塞操作
+    # def _load_json():
+    #     with json_file.open("r", encoding="utf-8") as f:
+    #         return json.load(f)
 
-    workflow_data = await asyncio.to_thread(_load_json)
-    await logger.ainfo(f"Successfully loaded answer.json, Response text length: {len(workflow_data)}")
+    # workflow_data = await asyncio.to_thread(_load_json)
+    # await logger.ainfo(f"Successfully loaded answer.json, Response text length: {len(workflow_data)}")
 
-    # ====================== LLM输出结果的json提取与格式验证
+    # ==================== 4. LLM输出结果的json提取与格式验证
     # Extract JSON from response (handle markdown code blocks)
-    # json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-    # if json_match:
-    #     json_str = json_match.group(1)
-    # else:
-    #     # Try to find JSON object directly
-    #     json_match = re.search(r"(\{.*\})", response_text, re.DOTALL)
-    #     if json_match:
-    #         json_str = json_match.group(1)
-    #     else:
-    #         raise ValueError("No JSON found in LLM response")
-    # # Parse JSON
-    # try:
-    #     workflow_data = json.loads(json_str)
-    # except json.JSONDecodeError as e:
-    #     await logger.aerror(f"Failed to parse JSON from LLM response: {e}")
-    #     await logger.adebug(f"Response text: {response_text}")
-    #     raise ValueError(f"Invalid JSON in LLM response: {e}") from e
+    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
+    if json_match:
+        json_str = json_match.group(1)
+    else:
+        # Try to find JSON object directly
+        json_match = re.search(r"(\{.*\})", response_text, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1)
+        else:
+            raise ValueError("No JSON found in LLM response")
+    # Parse JSON
+    try:
+        workflow_data = json.loads(json_str)
+    except json.JSONDecodeError as e:
+        await logger.aerror(f"Failed to parse JSON from LLM response: {e}")
+        await logger.adebug(f"Response text: {response_text}")
+        raise ValueError(f"Invalid JSON in LLM response: {e}") from e
 
-    # Validate workflow
+
+
+    # ==================== 5. 基于nodes.json填充LLM输出的结果
+    # import pdb
+    # pdb.set_trace()
+    workflow_data = enrich_workflow_nodes(workflow_data)
+
+    import os
+    output_dir = "/home/gys/catl/langflow/src/backend/base/langflow/agent_workflow"
+    file_path = os.path.join(output_dir, "test2.json")
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(workflow_data, f, ensure_ascii=False, indent=2)
+
+    # ==================== 6. Validate workflow
     is_valid, error_msg = validate_workflow_json(workflow_data)
     if not is_valid:
         await logger.aerror(f"Workflow validation failed: {error_msg}")
@@ -296,4 +314,128 @@ async def generate_workflow_with_llm(
     workflow_data = format_workflow_json(workflow_data)
 
     await logger.ainfo("Successfully generated workflow from LLM")
+    await logger.ainfo(f"================ {workflow_data.keys()} =================")
+    return workflow_data
+
+
+
+def enrich_workflow_nodes(workflow_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    补全 workflow_data 中 nodes 的缺失字段，使用本地 nodes.json 中的完整模板。
+    
+    规则：
+    - 保留 workflow_data 中已有的字段值（LLM 输出优先）。
+    - 仅从模板中补充缺失的字段。
+    - 不修改 edges 或其他顶层字段。
+    
+    Args:
+        workflow_data (dict): LLM 输出的工作流数据（含部分节点信息）
+    
+    Returns:
+        dict: 补全后的 workflow_data
+    """
+    NODES_JSON_PATH = "/home/gys/catl/langflow/src/backend/base/langflow/agent_workflow/nodes.json"
+    
+    # 加载完整的节点模板
+    nodes_json_path = Path(NODES_JSON_PATH)
+    if not nodes_json_path.exists():
+        raise FileNotFoundError(f"nodes.json not found at {NODES_JSON_PATH}")    
+    with open(nodes_json_path, "r", encoding="utf-8") as f:
+        nodes_schema = json.load(f)  # 假设是 { "ChatInput": {...}, ... }    
+    node_templates = {}
+    for template_node in nodes_schema.get("nodes", []):
+        node_type = template_node.get("id").split('-')[0]
+        if node_type:
+            node_templates[node_type] = template_node
+
+   
+    enriched_workflow = deepcopy(workflow_data)
+    nodes = enriched_workflow["data"]["nodes"]
+    
+    for i, node in enumerate(nodes):
+        node_type = node.get("id").split('-')[0]
+        if not node_type:
+            continue  # 跳过无 type 的节点
+        
+        # 从模板中获取完整定义
+        template_node = node_templates.get(node_type)
+        if not template_node:
+            continue  # 模板中无此类型，跳过
+        
+        # 合并：已有字段保留，缺失字段从模板补充
+        def deep_merge_preserve_existing(existing: Dict, template: Dict) -> Dict:
+            merged = deepcopy(template)  # 先复制模板
+            for k, v in existing.items():
+                if isinstance(v, dict) and isinstance(merged.get(k), dict):
+                    merged[k] = deep_merge_preserve_existing(v, merged[k])
+                else:
+                    merged[k] = v  # LLM 的值优先
+            return merged
+
+        # 执行合并
+        merged_node = deep_merge_preserve_existing(node, template_node)
+        
+        # 写回
+        nodes[i] = merged_node
+
+    return enriched_workflow
+
+
+
+def normalize_workflow_nodes(
+    workflow_data: dict,
+    nodes_json_path: str = "/home/gys/catl/langflow/src/backend/base/langflow/agent_workflow/nodes.json"
+) -> dict:
+    """
+    使用 nodes.json 作为权威模板，修复 / 补全 LLM 生成的 workflow JSON
+    """
+
+    # ---------- 1. 加载 nodes.json ----------
+    with open(nodes_json_path, "r", encoding="utf-8") as f:
+        nodes_schema = json.load(f)
+
+    # ---------- 2. 构建 type -> 模板 映射 ----------
+    template_map = {}
+    for template_node in nodes_schema.get("nodes", []):
+        node_type = template_node.get("id").split('-')[0]
+        if node_type:
+            template_map[node_type] = template_node
+
+    # ---------- 3. 深度合并函数（只补缺失，不覆盖） ----------
+    def deep_merge(llm_node: dict, template_node: dict) -> dict:
+        """
+        template_node 作为兜底，llm_node 优先
+        """
+        result = copy.deepcopy(template_node)
+
+        for key, value in llm_node.items():
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
+                result[key] = deep_merge(value, result[key])
+            else:
+                result[key] = value
+
+        return result
+
+    # ---------- 4. 遍历并修复 workflow 中的 nodes ----------
+    normalized_nodes = []
+    # import pdb; pdb.set_trace()
+    for llm_node in workflow_data.get("nodes", []):
+        node_type = llm_node.get("id").split('-')[0]
+
+        # 未知节点类型：原样保留（防止系统被 LLM 输出阻断）
+        if node_type not in template_map:
+            normalized_nodes.append(llm_node)
+            continue
+
+        template_node = template_map[node_type]
+
+        # 基于模板补全字段
+        fixed_node = deep_merge(llm_node, template_node)
+        normalized_nodes.append(fixed_node)
+
+    workflow_data["nodes"] = normalized_nodes
     return workflow_data

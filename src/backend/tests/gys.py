@@ -1,37 +1,23 @@
-# async def test():
-#     llm = ChatOpenAI(
-#         model="glm-4.7",
-#         openai_api_key="71dd92e623954e818289ca9edda5f454.IFn9uiyvXmkhar5Q",  # 你的 Google API Key
-#         temperature=1.0,
-#         base_url="https://open.bigmodel.cn/api/paas/v4/"
-#     )
+import asyncio
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
-#     resp = await llm.ainvoke([HumanMessage(content="Hello")])
-#     print(resp.content)
+async def test():
+    llm = ChatOpenAI(
+        model="deepseek-chat",
+        openai_api_key="sk-882115c34ef04e0bae6d9724597fa0fa",  # 你的 Google API Key
+        temperature=0,
+        base_url="https://api.deepseek.com/v1"
+    )
 
-# asyncio.run(test())
+    resp = await llm.ainvoke([HumanMessage(content="Hello")])
+    print(resp.content)
 
-import json
-from pathlib import Path
-
-# ====================== TEST： 直接读取答案
-# 读取并解析 JSON
-json_file = Path(
-    "/mnt/d/HonorStoreDownload/WSL/code/langflow/langflow/src/backend/base/langflow/agent_workflow/answer.json"
-)
+asyncio.run(test())
 
 
-# 在线程池中执行阻塞操作
-def _load_json():
-    with json_file.open("r", encoding="utf-8") as f:
-        return json.load(f)
 
 
-data = _load_json()
-import pdb
-
-pdb.set_trace()
-a = 1
 # Extract JSON from response (handle markdown code blocks)
 
 # from zai import ZhipuAiClient
